@@ -5,14 +5,26 @@ import urllib.request
 import datetime
 import logging
 
+SocketMode = False
+
 from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
+
+if SocketMode == True:
+    from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from dotenv import load_dotenv
 load_dotenv()
 
-# Initializes the app with the bot token and socket mode handler
-app = App(token=os.getenv('SLACK_BOT_TOKEN'))
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+if SocketMode == True:
+    app = App(token=os.getenv('SLACK_BOT_TOKEN'))
+else:
+    app = App(
+        token=os.getenv('SLACK_BOT_TOKEN'),
+        signing_secret=os.getenv('SLACK_SIGNING_SECRET')
+    )
 
 #url = os.getenv('ical_link')
 ##Start_date = (2024, 1, 6)
@@ -40,13 +52,16 @@ app = App(token=os.getenv('SLACK_BOT_TOKEN'))
 #
 #    print("{} at {} begins at {} - {}".format(name, location, start, description))   
 
-@app.event("app_mention")
-def Responce(event, say):
-    print("This worked")
-    welcome_channel_id = os.getenv('channel_id')
-    user_id = event["user"]
-    text = f"Hey, <@{user_id}>!"
-    say(text=text, channel=welcome_channel_id)
+#@app.event("app_mention")
+#def Responce(event, say):
+#    print("This worked")
+#    welcome_channel_id = os.getenv('channel_id')
+#    user_id = event["user"]
+#    text = f"Hey, <@{user_id}>!"
+#    say(text=text, channel=welcome_channel_id)
 
 if __name__ == "__main__":
-    SocketModeHandler(app, os.getenv('SLACK_APP_TOKEN')).start()
+    if SocketMode == True:
+        SocketModeHandler(app, os.getenv('SLACK_APP_TOKEN')).start()
+    else:
+        app.start(port=int(os.environ.get('PORT', 3000)))
