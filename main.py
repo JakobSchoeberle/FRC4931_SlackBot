@@ -1,4 +1,5 @@
 import os
+import asyncio
 import icalendar
 import recurring_ical_events
 import urllib.request
@@ -31,18 +32,27 @@ async def Responce(event, say):
     text = f"Hey, <@{user_id}>!"
     await say(text=text, channel=welcome_channel_id)
 
-#if __name__ == "__main__":
-    #if SocketMode == True:
-        #SocketModeHandler(app, os.getenv("SLACK_APP_TOKEN")).start()
-    #else:
-        #app.start(port=int(3000))
+async def wait_until(dt):
+    # sleep until the specified datetime
+    now = datetime.datetime.now()
+    await asyncio.sleep((dt - now).total_seconds())
+
+async def run_at(dt, coro):
+    await wait_until(dt)
+    return await coro
+
+async def hello():
+    print('hello')
+
 
 async def main():
     handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     await handler.start_async()
 
-
 if __name__ == "__main__":
-    import asyncio
-
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_at(datetime.datetime(datetime.date.today().year, datetime.date.today().month, datetime.date.today().day, 16, 9), hello()))
+    loop.run_forever()
     asyncio.run(main())
+
+    
